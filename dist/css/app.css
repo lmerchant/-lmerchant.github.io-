@@ -1,0 +1,42 @@
+#mapid { width: 600px; height: 400px; }
+
+
+
+#dataset_table_filter{
+  float: none;
+  text-align: inherit;
+}
+
+table.dataTable {
+  border-collapse: collapse; 
+}
+
+table.dataTable td {
+  border-bottom: 1px solid #ccc;
+}
+
+
+table.dataTable thead .sorting,
+table.dataTable thead .sorting_asc,
+table.dataTable thead .sorting_desc,
+table.dataTable thead .sorting_asc_disabled,
+table.dataTable thead .sorting_desc_disabled {
+    cursor: pointer;
+        position: relative;
+}
+
+table.dataTable thead .sorting_asc_disabled:after,
+table.dataTable thead .sorting_desc_disabled:after {
+    color: #eee;
+}
+
+table.dataTable thead > tr > th {
+    padding-left: 8px;
+        padding-right: 30px;
+}
+table.dataTable th:active {
+    outline: none;
+}
+table.dataTable th {
+  white-space: nowrap;
+}
