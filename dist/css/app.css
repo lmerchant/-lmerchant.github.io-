@@ -42,7 +42,6 @@ body {
 
 #datatables_container {
   display: flex;
-  align-items: center;
   justify-content: center;
   flex-direction: row;
   text-align: center;
