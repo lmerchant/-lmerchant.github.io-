@@ -2,60 +2,6 @@ import axios from 'axios'
 import {cchdoPopupText, bcodmoPopupText} from './popUpText'
 import {showTables} from './showTables'
 
-// //function cchdoPopupText(feature) {
-//   return (
-//     `
-//     <table class="table table-striped table-sm">
-//     <tbody>
-//     <tr>
-//       <th scope="row">Expocode</th><td><a href="https://cchdo.ucsd.edu/cruise/${feature['properties']['expocode']}" target="_blank">${feature['properties']['expocode']}</a></td>
-//     </tr>
-//     <tr>
-//       <th scope="row">Start Date</th><td>${feature['properties']['start_date']}</td>
-//     </tr>
-//     <tr>
-//       <th scope="row">End Date</th><td>${feature['properties']['end_date']}</td>
-//     </tr>
-//     <tr>
-//       <th scope="row">Platform</th><td>${feature['properties']['platform']}</td>
-//     </tr>
-//     <tr>
-//       <th scope="row">Chief Scientist</th><td>${feature['properties']['chief_scientist']}</td>
-//     </tr>
-//     </tbody>
-//     </table>
-//     `
-//     )
-// }
-
-
-
-// function bcodmoPopupText(feature) {
-//   return (
-//     `
-//       <table class="table table-striped table-sm">
-//       <tbody>
-//       <tr>
-//         <th scope="row">Dataset ID</th><td><a href="https://www.bco-dmo.org/dataset/${feature['properties']['dataset_id']}" target="_blank">${feature['properties']['dataset_id']}</a></td>
-//       </tr>
-//       <tr>
-//         <th scope="row">Start Date</th><td>${feature['properties']['start_date']}</td>
-//       </tr>
-//       <tr>
-//         <th scope="row">End Date</th><td>${feature['properties']['end_date']}</td>
-//       </tr>
-//       <tr>
-//         <th scope="row">Platform</th><td>${feature['properties']['platforms']}</td>
-//       </tr>
-//       <tr>
-//         <th scope="row">Chief Scientist</th><td>${feature['properties']['chief_scientist']}</td>
-//       </tr>
-//       </tbody>
-//       </table>
-//     `
-//     )
-// }
-
 
 var map = L.map('mapid',{"preferCanvas": true, zoomSnap: 0.25, zoomControl: false}).setView([0, 0], 1.25);
 
@@ -209,13 +155,8 @@ Promise.all([
 
       console.log('start', cchdoFeatures.length)
 
-      //var minDateEl = document.querySelector('.min_date')
-      //var maxDateEl = document.querySelector('.max_date')
-
       minDateEl.innerHTML = minDate
       maxDateEl.innerHTML = maxDate
-
-
 
       var cchdoFeaturesFiltered = cchdoFeatures.filter(function(feature) {
           var startDate = feature['properties']['start_date']
@@ -233,7 +174,12 @@ Promise.all([
             return false
           }
 
-          return startYear > minDate && endYear < maxDate
+          if (startDate && endDate) {
+            var endYear = parseInt(endDate.slice(0,4))
+            return startYear >= minDate && endYear <= maxDate
+          } else {
+            return startYear >= minDate && startYear <= maxDate
+          }
 
         })
 
@@ -315,7 +261,6 @@ Promise.all([
 
 
     // Set tables innerHTML to nothing
-
     var cchdoTable = document.querySelector('#datatable1')
     var bcodmoTable = document.querySelector('#datatable2')
 
@@ -324,217 +269,16 @@ Promise.all([
 
     showTables(map, myFeatureCCHDO, myFeatureBCODMO)
 
-
   });
 
-
-
-
 })
-
-
-// function showTables(myFeatureCCHDO, myFeatureBCODMO) {
-
-//   var parent
-//   var element
-//   var el_id
-
-//   var parents = []
-//   var myLayers = []
-
-//   var expocode
-//   var datasetId
-//   var platform
-//   var platforms
-//   var startDate
-//   var endDate
-//   var chiefScientist
-
-//   var cchdoExpocodes = []
-//   var cchdoPlatforms = []
-//   var cchdoStartDates = []
-//   var cchdoEndDates = []
-//   var cchdoChiefScientists = []
-
-//   var bcodmoDatasetIds = []
-//   var bcodmoPlatforms = []
-//   var bcodmoStartDates = []
-//   var bcodmoEndDates = []
-//   var bcodmoChiefScientists = []    
-
-//   myFeatureCCHDO.eachLayer(function(layer) {
-
-//       // markers in layer
-//       layer.eachLayer(function (layer) {
-
-//         if(map.getBounds().contains(layer.getLatLng())) {
-
-
-//           parent = layer._eventParents
-//           el_id = Object.keys(parent)[0]
-          
-
-//           expocode = layer.feature.properties.expocode
-//           platform = layer.feature.properties.platform
-//           startDate = layer.feature.properties.start_date
-//           endDate = layer.feature.properties.end_date
-//           chiefScientist = layer.feature.properties.chief_scientist
-
-//           if(cchdoExpocodes.indexOf(expocode) === -1) {
-//             cchdoExpocodes.push(expocode)
-//             cchdoPlatforms.push(platform)
-//             cchdoStartDates.push(startDate)
-//             cchdoEndDates.push(endDate)
-//             cchdoChiefScientists.push(chiefScientist)
-
-//           }
-
-//         }   
-//       })
-
-//   });  /// end feature cchdo
-
-
-//   myFeatureBCODMO.eachLayer(function(layer) {
-
-//       // markers in layer
-//       layer.eachLayer(function (layer) {
-
-//         if(map.getBounds().contains(layer.getLatLng())) {
-
-//           parent = layer._eventParents
-//           el_id = Object.keys(parent)[0]
-
-//           datasetId = layer.feature.properties.dataset_id
-//           platforms = layer.feature.properties.platforms
-//           startDate = layer.feature.properties.start_date
-//           endDate = layer.feature.properties.end_date
-//           chiefScientist = layer.feature.properties.chief_scientist
-
-//           if(bcodmoDatasetIds.indexOf(datasetId) === -1) {
-//             bcodmoDatasetIds.push(datasetId)
-//             bcodmoPlatforms.push(platforms)
-//             bcodmoStartDates.push(startDate)
-//             bcodmoEndDates.push(endDate)
-//             bcodmoChiefScientists.push(chiefScientist)
-
-//           }
-
-//         }   
-//       })
-
-//   }); // end feature bcodmo 
-
-
-
-//   // Datatable
-
-//   var dataSet1 = []
-//   var element
-
-//   for (var k = 0; k < cchdoExpocodes.length; k++) {
-
-//     element = [cchdoExpocodes[k], cchdoPlatforms[k],
-//                cchdoStartDates[k], cchdoEndDates[k], cchdoChiefScientists[k]]
-//     dataSet1.push(element)
-
-
-//   }
-
-  
-//   var dataSet2 = []
-
-//   for (var k = 0; k < bcodmoDatasetIds.length; k++) {
-
-//     element = [bcodmoDatasetIds[k], bcodmoPlatforms[k],
-//                bcodmoStartDates[k], bcodmoEndDates[k], bcodmoChiefScientists[k]]
-//     dataSet2.push(element)
-
-
-//   }
-
-
-//   $(document).ready(function() {
-
-//       $.fn.dataTable.moment( 'YYYY-MM-DD' );
-
-//       $('#datatable1').DataTable( {
-//           "destroy": true,
-//           "paging": true,
-//           "pagingType": "full_numbers",
-//           "data": dataSet1,
-//           "columns": [
-//               { title: "Expocode"},
-//               { title: "Platform"},
-//               { title: "Start Date" },
-//               { title: "End Date" },
-//               { title: "PI" }
-//           ],
-//           "columnDefs": [ {
-//             "targets": 0,
-//             "render": function ( data, type, row, meta ) {
-//               return '<a href="https://cchdo.ucsd.edu/cruise/'+ data +'">'+ data + '</a>';
-//             }
-//           }
-//           ],
-
-//           "order": [[ 1, "desc" ]]
-//       } );
-
-//   } ); // end datatable
-
-
-
-
-
-//   $(document).ready(function() {
-
-//       $.fn.dataTable.moment( 'YYYY-MM-DD' );
-
-//       $('#datatable2').DataTable( {
-//           "destroy": true,
-//           "paging": true,
-//           "pagingType": "full_numbers",
-//           "data": dataSet2,
-//           "columns": [
-//               { title: "Dataset Id"},
-//               { title: "Platforms"},
-//               { title: "Start Date" },
-//               { title: "End Date" },
-//               { title: "PI" }
-//           ],
-//           "columnDefs": [ {
-//             "targets": 0,
-//             "render": function ( data, type, row, meta ) {
-//               return '<a href="https://www.bco-dmo.org/dataset/'+ data +'">'+ data + '</a>';
-//             }
-//           }, 
-//           {
-//             "targets": 1,
-//             "render": function(data,type,row,meta) {
-//                 var list = "<ul>";
-//                 for (var i=0; i< data.length; i++){
-//                   list += "<li>" + data[i] + "</li>";
-//                 }
-//                 list += "</ul>";
-//                 return list}
-//             }
-//           ],
-
-//           "order": [[ 1, "desc" ]]
-//       } );
-
-//   }); // end datatable
-
-
-// }
 
 
 map.on('zoomend', function() {
 
   showTables(map, myFeatureCCHDO, myFeatureBCODMO)
 
-}); // end on zoom
+}); 
 
 
 
