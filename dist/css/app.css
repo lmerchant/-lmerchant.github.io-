@@ -1,6 +1,14 @@
-#mapid { width: 600px; height: 400px; }
+
+body {
+  box-sizing: content-box;
+}
 
 
+#mapid { 
+  width: 630px;
+  height: 630px;
+  margin: 20px;
+}
 
 #dataset_table_filter{
   float: none;
@@ -39,4 +47,41 @@ table.dataTable th:active {
 }
 table.dataTable th {
   white-space: nowrap;
+}
+
+#datatables_container {
+  width: 80%;
+  margin: 20px;
+  display: flex;
+}
+
+#cchdo_table {
+  width: 40%;
+  display: inline-block;
+}
+
+#bcodmo_table {
+  margin-left: 20%;
+  width: 40%;
+  display: inline-block;
+}
+
+.leaflet-popup-content {
+  height: 100px;
+  overflow: auto;
+}
+
+
+#slider {
+  width: 80%;
+  margin: 20px;
+}
+
+
+.cchdo_legend {
+  color: #ff7800;
+}
+
+.bcodmo_legend {
+  color: #00cc00;
 }
