@@ -164,18 +164,13 @@ Promise.all([
 
           if (startDate) {
             var startYear = parseInt(startDate.slice(0,4))
-          } else {
-            return false
-          }
+          } 
 
           if (endDate) {
             var endYear = parseInt(endDate.slice(0,4))
-          } else {
-            return false
-          }
+          } 
 
           if (startDate && endDate) {
-            var endYear = parseInt(endDate.slice(0,4))
             return startYear >= minDate && endYear <= maxDate
           } else {
             return startYear >= minDate && startYear <= maxDate
@@ -189,18 +184,13 @@ Promise.all([
 
           if (startDate) {
             var startYear = parseInt(startDate.slice(0,4))
-          } else {
-            return false
           }
 
           if (endDate) {
             var endYear = parseInt(endDate.slice(0,4))
-          } else {
-            return false
-          }
+          } 
 
           if (startDate && endDate) {
-            var endYear = parseInt(endDate.slice(0,4))
             return startYear >= minDate && endYear <= maxDate
           } else {
             return startYear >= minDate && startYear <= maxDate
