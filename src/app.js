@@ -1,692 +1,541 @@
+import axios from 'axios'
+import {cchdoPopupText, bcodmoPopupText} from './popUpText'
+import {showTables} from './showTables'
+
+// //function cchdoPopupText(feature) {
+//   return (
+//     `
+//     <table class="table table-striped table-sm">
+//     <tbody>
+//     <tr>
+//       <th scope="row">Expocode</th><td><a href="https://cchdo.ucsd.edu/cruise/${feature['properties']['expocode']}" target="_blank">${feature['properties']['expocode']}</a></td>
+//     </tr>
+//     <tr>
+//       <th scope="row">Start Date</th><td>${feature['properties']['start_date']}</td>
+//     </tr>
+//     <tr>
+//       <th scope="row">End Date</th><td>${feature['properties']['end_date']}</td>
+//     </tr>
+//     <tr>
+//       <th scope="row">Platform</th><td>${feature['properties']['platform']}</td>
+//     </tr>
+//     <tr>
+//       <th scope="row">Chief Scientist</th><td>${feature['properties']['chief_scientist']}</td>
+//     </tr>
+//     </tbody>
+//     </table>
+//     `
+//     )
+// }
 
 
-var map = L.map('mapid',{"preferCanvas": true}).setView([51.505, -0.09], 1);
 
-var OpenStreetMap_Mapnik = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// function bcodmoPopupText(feature) {
+//   return (
+//     `
+//       <table class="table table-striped table-sm">
+//       <tbody>
+//       <tr>
+//         <th scope="row">Dataset ID</th><td><a href="https://www.bco-dmo.org/dataset/${feature['properties']['dataset_id']}" target="_blank">${feature['properties']['dataset_id']}</a></td>
+//       </tr>
+//       <tr>
+//         <th scope="row">Start Date</th><td>${feature['properties']['start_date']}</td>
+//       </tr>
+//       <tr>
+//         <th scope="row">End Date</th><td>${feature['properties']['end_date']}</td>
+//       </tr>
+//       <tr>
+//         <th scope="row">Platform</th><td>${feature['properties']['platforms']}</td>
+//       </tr>
+//       <tr>
+//         <th scope="row">Chief Scientist</th><td>${feature['properties']['chief_scientist']}</td>
+//       </tr>
+//       </tbody>
+//       </table>
+//     `
+//     )
+// }
+
+
+var map = L.map('mapid',{"preferCanvas": true, zoomSnap: 0.25, zoomControl: false}).setView([0, 0], 1.25);
+
+var basemap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 }).addTo(map)
 
 
+var zoomHome = L.Control.zoomHome();
+zoomHome.addTo(map);
 
-L.Control.boxzoom({ position:'topleft' }).addTo(map);
+
+map.spin(true);
 
 
-let geojsonMarkerOptions1 = {
-    radius: 4,
-    fillColor: "#ff7800",
-    color: "#000",
-    weight: 1,
-    opacity: 1,
-    fillOpacity: 0.8
-  };
+  let cchdo_markers = {
+      radius: 5,
+      fillColor: "#ff7800",
+      color: "#000",
+      weight: 1,
+      opacity: 1,
+      fillOpacity: 0.8
+    };
 
-  let geojsonMarkerOptions2 = {
-    radius: 4,
-    fillColor: "#00cc00",
-    color: "#000",
-    weight: 1,
-    opacity: 1,
-    fillOpacity: 0.8
-  };
+    let bcodmo_markers = {
+      radius: 5,
+      fillColor: "#00cc00",
+      color: "#000",
+      weight: 1,
+      opacity: 1,
+      fillOpacity: 0.8
+    };
 
-var myFeatureGroup1 = L.featureGroup();
-var myFeatureGroup2 = L.featureGroup();
+  L.Control.boxzoom({ position:'topleft' }).addTo(map);
+
+  var myFeatureCCHDO = L.featureGroup();
+  var myFeatureBCODMO = L.featureGroup();
+
+
+
+
+// basemap.on('loading', function (event) {
+//   console.log('start loading tiles');
+  
+// });
+
+// basemap.on('load', function (event) {
+//   console.log('all tiles loaded');
+// });
+
+
+
 
 Promise.all([
   fetch("data/cchdo_cruises.json"),
   fetch("data/bco-dmo_cruises.json")
-]).then(function([group1, group2]) {
+]).then(function([cchdo, bcodmo]) {
 
-  return Promise.all([group1.json(), group2.json()]);
+  return Promise.all([cchdo.json(), bcodmo.json()]);
 
-}).then(function([group1Json, group2Json]) {
+}).then(function([cchdoJson, bcodmoJson]) {
 
-  console.log(group1Json.length)
-  console.log(group2Json.length)
+    console.log(cchdoJson.features.length)
+    console.log(bcodmoJson.features.length)
+
+    map.spin(false)
 
 
-    features = group1Json["features"]
+    var cchdoFeatures = cchdoJson["features"]
   
-    geoLayer = L.geoJson(features, {
+    var cchdoGeoLayer = L.geoJson(cchdoFeatures, {
         pointToLayer: function (feature, latlng) {
-            return L.circleMarker(latlng, geojsonMarkerOptions1);
+            return L.circleMarker(latlng, cchdo_markers);
         },
         onEachFeature: function (feature, layer) {
-        layer.bindPopup('<p>expocode: '+ '<expocode>' +'</p>');
+
+        layer.bindPopup(cchdoPopupText(feature))
+
       }
     }).addTo(map); 
 
-    myFeatureGroup1.addLayer(geoLayer);
+    myFeatureCCHDO.addLayer(cchdoGeoLayer);
 
 
-    features = group2Json["features"]
+    var bcodmoFeatures = bcodmoJson["features"]
   
-    geoLayer = L.geoJson(features, {
+    var bcodmoGeoLayer = L.geoJson(bcodmoFeatures, {
         pointToLayer: function (feature, latlng) {
-            return L.circleMarker(latlng, geojsonMarkerOptions2);
+            return L.circleMarker(latlng, bcodmo_markers);
         },
         onEachFeature: function (feature, layer) {
-        layer.bindPopup('<p>expocode: '+ '<expocode>' +'</p>');
+                layer.bindPopup(bcodmoPopupText(feature))
       }
     }).addTo(map); 
 
-    myFeatureGroup2.addLayer(geoLayer);
+    myFeatureBCODMO.addLayer(bcodmoGeoLayer);
+
+
+    map.addLayer(myFeatureCCHDO);
+    map.addLayer(myFeatureBCODMO);
+
+    var baseMaps = {
+      "base": basemap
+    };
+
+    var overlayMaps = {
+      "<span class='cchdo_legend'>CCHDO</span>": myFeatureCCHDO,
+      "<span class='bcodmo_legend'>BCO-DMO</span>": myFeatureBCODMO
+    }
+
+    //var layerscontrol = L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+    var layerscontrol = L.control.layers(baseMaps, overlayMaps,{collapsed:false, hideSingleBase:true}).addTo(map);
+
+
+  showTables(map, myFeatureCCHDO, myFeatureBCODMO)
+
+
+  var sliderElement = document.getElementById('slider');
+  noUiSlider.create(slider, {
+      connect: true,
+      start: [ 1950, 2020 ],
+      range: {
+          min: 1950,
+          max: 2020
+      }
+  });
+
+
+  var minDateEl = document.querySelector('.min_date')
+  var maxDateEl = document.querySelector('.max_date')
+
+  slider.noUiSlider.on('update', function() {
+
+      var sliderVal = slider.noUiSlider.get()
+      var minDate = parseInt(sliderVal[0])
+      var maxDate = parseInt(sliderVal[1])
+
+      minDateEl.innerHTML = minDate
+      maxDateEl.innerHTML = maxDate
+  })
+
+
+  //sliderElement.addEventListener('click', function () {
+  slider.noUiSlider.on('change', function() {
+
+      var sliderVal = slider.noUiSlider.get()
+      var minDate = parseInt(sliderVal[0])
+      var maxDate = parseInt(sliderVal[1])
+
+      console.log('start', cchdoFeatures.length)
+
+      //var minDateEl = document.querySelector('.min_date')
+      //var maxDateEl = document.querySelector('.max_date')
+
+      minDateEl.innerHTML = minDate
+      maxDateEl.innerHTML = maxDate
+
+
+
+      var cchdoFeaturesFiltered = cchdoFeatures.filter(function(feature) {
+          var startDate = feature['properties']['start_date']
+          var endDate = feature['properties']['end_date']
+
+          if (startDate) {
+            var startYear = parseInt(startDate.slice(0,4))
+          } else {
+            return false
+          }
+
+          if (endDate) {
+            var endYear = parseInt(endDate.slice(0,4))
+          } else {
+            return false
+          }
+
+          return startYear > minDate && endYear < maxDate
+
+        })
+
+      var bcodmoFeaturesFiltered = bcodmoFeatures.filter(function(feature) {
+          var startDate = feature['properties']['start_date']
+          var endDate = feature['properties']['end_date']
+
+          if (startDate) {
+            var startYear = parseInt(startDate.slice(0,4))
+          } else {
+            return false
+          }
+
+          if (endDate) {
+            var endYear = parseInt(endDate.slice(0,4))
+          } else {
+            return false
+          }
+
+          if (startDate && endDate) {
+            var endYear = parseInt(endDate.slice(0,4))
+            return startYear >= minDate && endYear <= maxDate
+          } else {
+            return startYear >= minDate && startYear <= maxDate
+          }
+        
+       })
+
+
+    map.removeLayer(myFeatureCCHDO)
+    map.removeLayer(myFeatureBCODMO)
+
+
+    myFeatureCCHDO = L.featureGroup();
+    myFeatureBCODMO = L.featureGroup();
+
+
+    cchdoGeoLayer = L.geoJson(cchdoFeaturesFiltered, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, cchdo_markers);
+        },
+        onEachFeature: function (feature, layer) {
+        layer.bindPopup(cchdoPopupText(feature))
+      }
+
+    }).addTo(map); 
+
+    myFeatureCCHDO.addLayer(cchdoGeoLayer);
+
+  
+    var bcodmoGeoLayer = L.geoJson(bcodmoFeaturesFiltered, {
+        pointToLayer: function (feature, latlng) {
+            return L.circleMarker(latlng, bcodmo_markers);
+        },
+        onEachFeature: function (feature, layer) {
+                layer.bindPopup(bcodmoPopupText(feature))
+      }
+    }).addTo(map); 
+
+    myFeatureBCODMO.addLayer(bcodmoGeoLayer);
+
+
+    map.addLayer(myFeatureCCHDO);
+    map.addLayer(myFeatureBCODMO);
+
+    baseMaps = {
+      "base": basemap
+    };
+
+    overlayMaps = {
+      "<span class='cchdo_legend'>CCHDO</span>": myFeatureCCHDO,
+      "<span class='bcodmo_legend'>BCO-DMO</span>": myFeatureBCODMO
+    }
+
+     layerscontrol.remove()
+
+
+    layerscontrol = L.control.layers(baseMaps, overlayMaps,{collapsed:false, hideSingleBase:true}).addTo(map);
+
+
+    // Set tables innerHTML to nothing
+
+    var cchdoTable = document.querySelector('#datatable1')
+    var bcodmoTable = document.querySelector('#datatable2')
+
+    cchdoTable.innerHTML = ''
+    bcodmoTable.innerHTML = ''
+
+    showTables(map, myFeatureCCHDO, myFeatureBCODMO)
+
+
+  });
+
+
 
 
 })
 
 
-    var group1 = L.layerGroup(myFeatureGroup1);
+// function showTables(myFeatureCCHDO, myFeatureBCODMO) {
 
-    var group2 = L.layerGroup(myFeatureGroup2);
+//   var parent
+//   var element
+//   var el_id
+
+//   var parents = []
+//   var myLayers = []
+
+//   var expocode
+//   var datasetId
+//   var platform
+//   var platforms
+//   var startDate
+//   var endDate
+//   var chiefScientist
+
+//   var cchdoExpocodes = []
+//   var cchdoPlatforms = []
+//   var cchdoStartDates = []
+//   var cchdoEndDates = []
+//   var cchdoChiefScientists = []
+
+//   var bcodmoDatasetIds = []
+//   var bcodmoPlatforms = []
+//   var bcodmoStartDates = []
+//   var bcodmoEndDates = []
+//   var bcodmoChiefScientists = []    
+
+//   myFeatureCCHDO.eachLayer(function(layer) {
+
+//       // markers in layer
+//       layer.eachLayer(function (layer) {
+
+//         if(map.getBounds().contains(layer.getLatLng())) {
 
 
-    map.addLayer(myFeatureGroup1);
-    map.addLayer(myFeatureGroup2);
+//           parent = layer._eventParents
+//           el_id = Object.keys(parent)[0]
+          
 
-    var baseMaps = {
-      "base": OpenStreetMap_Mapnik
-    };
+//           expocode = layer.feature.properties.expocode
+//           platform = layer.feature.properties.platform
+//           startDate = layer.feature.properties.start_date
+//           endDate = layer.feature.properties.end_date
+//           chiefScientist = layer.feature.properties.chief_scientist
 
-    var overlayMaps = {
-      "Group1": myFeatureGroup1,
-      "Group2": myFeatureGroup2
-    }
+//           if(cchdoExpocodes.indexOf(expocode) === -1) {
+//             cchdoExpocodes.push(expocode)
+//             cchdoPlatforms.push(platform)
+//             cchdoStartDates.push(startDate)
+//             cchdoEndDates.push(endDate)
+//             cchdoChiefScientists.push(chiefScientist)
 
-    L.control.layers(baseMaps, overlayMaps).addTo(map);
+//           }
+
+//         }   
+//       })
+
+//   });  /// end feature cchdo
+
+
+//   myFeatureBCODMO.eachLayer(function(layer) {
+
+//       // markers in layer
+//       layer.eachLayer(function (layer) {
+
+//         if(map.getBounds().contains(layer.getLatLng())) {
+
+//           parent = layer._eventParents
+//           el_id = Object.keys(parent)[0]
+
+//           datasetId = layer.feature.properties.dataset_id
+//           platforms = layer.feature.properties.platforms
+//           startDate = layer.feature.properties.start_date
+//           endDate = layer.feature.properties.end_date
+//           chiefScientist = layer.feature.properties.chief_scientist
+
+//           if(bcodmoDatasetIds.indexOf(datasetId) === -1) {
+//             bcodmoDatasetIds.push(datasetId)
+//             bcodmoPlatforms.push(platforms)
+//             bcodmoStartDates.push(startDate)
+//             bcodmoEndDates.push(endDate)
+//             bcodmoChiefScientists.push(chiefScientist)
+
+//           }
+
+//         }   
+//       })
+
+//   }); // end feature bcodmo 
 
 
 
+//   // Datatable
+
+//   var dataSet1 = []
+//   var element
+
+//   for (var k = 0; k < cchdoExpocodes.length; k++) {
+
+//     element = [cchdoExpocodes[k], cchdoPlatforms[k],
+//                cchdoStartDates[k], cchdoEndDates[k], cchdoChiefScientists[k]]
+//     dataSet1.push(element)
 
 
+//   }
 
-
-
-// const xhr = new XMLHttpRequest();
-
-// xhr.open('GET', 'cchdo_cruises.json');
-// xhr.setRequestHeader('Content-Type', 'application/json');
-// xhr.responseType = 'json';
-
-// xhr.onload = function() {
-//     if (xhr.status !== 200) return
-
-//     data = xhr.response
-
-//     features = data["features"]
   
-//     //L.geoJSON(features).addTo(map);
+//   var dataSet2 = []
 
-//     geoLayer = L.geoJson(features, {
-//         pointToLayer: function (feature, latlng) {
-//             return L.circleMarker(latlng, geojsonMarkerOptions1);
-//         },
-//         onEachFeature: function (feature, layer) {
-//         layer.bindPopup('<p>expocode: '+ '<expocode>' +'</p>');
-//       }
-//     }).addTo(map); 
+//   for (var k = 0; k < bcodmoDatasetIds.length; k++) {
 
-// };
-// xhr.send();
+//     element = [bcodmoDatasetIds[k], bcodmoPlatforms[k],
+//                bcodmoStartDates[k], bcodmoEndDates[k], bcodmoChiefScientists[k]]
+//     dataSet2.push(element)
 
-
-
-// const xhr = new XMLHttpRequest();
-
-// xhr.open('GET', 'bco-dmo_cruises.json');
-// xhr.setRequestHeader('Content-Type', 'application/json');
-// xhr.responseType = 'json';
-
-// xhr.onload = function() {
-//     if (xhr.status !== 200) return
-
-//     data = xhr.response
-
-//     features = data["features"]
-  
-//     //L.geoJSON(features).addTo(map);
-
-//     geoLayer = L.geoJson(features, {
-//         pointToLayer: function (feature, latlng) {
-//             return L.circleMarker(latlng, geojsonMarkerOptions2);
-//         },
-//         onEachFeature: function (feature, layer) {
-//         layer.bindPopup('<p>expocode: '+ '<expocode>' +'</p>');
-//       }
-//     }).addTo(map); 
-
-// };
-// xhr.send();
-
-
-
-
-
-
-
-
-// var map is an instance of a Leaflet map
-// this function assumes you have added markers as GeoJSON to the map
-// it will return an array of all features currently shown in the
-// active bounding region.
-
-// function getFeaturesInView() {
-//   var features = [];
-//   map.eachLayer( function(layer) {
-//     if(layer instanceof L.Marker) {
-//       if(map.getBounds().contains(layer.getLatLng())) {
-//         features.push(layer.feature);
-//       }
-//     }
-//   });
-//   return features;
-// }
-
-
-// function getFeaturesInView(myFeatures) {
-
-//   var features = [];
-
-//   var bbox = map.getBounds();
-
-//   console.log(bbox)
-//   console.log(bbox._northEast);
-//   console.log(bbox._southWest);
-
-
-// //   var bounds = [[X, Y], [X, Y]];
-
-// // // create an orange rectangle
-// // var boundingBox = L.rectangle(bounds, {color: "#ff7800", weight: 1});
-// // map.addLayer(boundingBox);
-
-
-//   // map.eachLayer( function(layer) {
-//   //   if(layer instanceof L.Marker) {
-//   //     if(map.getBounds().contains(layer.getLatLng())) {
-//   //       features.push(layer.feature);
-//   //     }
-//   //   }
-//   // });
-
-//   // map.eachLayer( function(layer) {
-
-//   //     if(map.getBounds().contains(layer.getLatLng())) {
-//   //       features.push(layer.feature);
-//   //     }
-//   //   console.log('here')
-
-//   // })
-
-
-//     // // Loop through each point in JSON file
-//     myFeatures.eachLayer(function (layer) {
-
-//        newMap = map.getBounds().contains(layer.getLatLng())
-
-//        console.log(newMap)
-
-//     })
-
-//   return features;
-// }
-
-
-
-
-
-// Promise.all([
-//   fetch("cchdo_part1.json"),
-//   fetch("cchdo_part2.json")
-// ]).then(function([group1, group2]) {
-
-//   return Promise.all([group1.json(), group2.json()]);
-
-// }).then(function([group1Json, group2Json]) {
-
-//   console.log(group1Json.length)
-//   console.log(group2Json.length)
-
-
-
-//   let coords
-//   let type
-//   let expocode
-//   let group1GeoJson
-
-//   let geojsonMarkerOptions1 = {
-//     radius: 4,
-//     fillColor: "#ff7800",
-//     color: "#000",
-//     weight: 1,
-//     opacity: 1,
-//     fillOpacity: 0.8
-//   };
-
-
-
-//   //var myFeatureGroup1 = L.featureGroup().addTo(map);
-// var myFeatureGroup1 = L.featureGroup();
-
-
-//   var geoLayer;
-
-//   //group1Json.length = 200;
-  
-//   for (let i = 0; i < group1Json.length; i++) {
-
-//     coords = group1Json[i].geometry.track.coordinates
-
-//     //console.log(coords)
-
-//     if (!coords) {
-//       continue
-//     }
-
-//     coords = group1Json[i].geometry.track.coordinates
-//     type = group1Json[i].geometry.track.type
-//     expocode = group1Json[i].expocode
-//     collection = group1Json[i].collections
-//     ship = group1Json[i].ship
-//     country = group1Json[i].country
-//     startDate = group1Json[i].startDate
-//     endDate = group1Json[i].endDate
-//     participant = group1Json[i].participants
-
-//     group1GeoJson = {}
-
-//     group1GeoJson.type = "Feature"
-//     group1GeoJson.geometry = {}
-//     group1GeoJson.geometry.type = "MultiPoint"
-//     group1GeoJson.geometry.coordinates = coords
-//     group1GeoJson.properties = {}
-//     group1GeoJson.properties.expocode = expocode
-//     group1GeoJson.properties.collection = collection
-//     group1GeoJson.properties.ship = ship
-//     group1GeoJson.properties.country = country
-//     group1GeoJson.properties.startDate = startDate
-//     group1GeoJson.properties.endDate = endDate
-//     group1GeoJson.properties.participant = participant
-
-//     //myFeatures.features.push(group1GeoJson)
-
-
-//     geoLayer = L.geoJson(group1GeoJson, {
-//         pointToLayer: function (feature, latlng) {
-//             return L.circleMarker(latlng, geojsonMarkerOptions1);
-//         },
-//         onEachFeature: function (feature, layer) {
-//         //console.log(layer.feature)
-//         layer.bindPopup('<p>expocode: '+ expocode +'</p>');
-//       }
-//     }).addTo(map);  
-
-//     myFeatureGroup1.addLayer(geoLayer);
 
 //   }
 
 
+//   $(document).ready(function() {
 
-//   let group2GeoJson
+//       $.fn.dataTable.moment( 'YYYY-MM-DD' );
 
-//   let geojsonMarkerOptions2 = {
-//     radius: 4,
-//     fillColor: "#00cc00",
-//     color: "#000",
-//     weight: 1,
-//     opacity: 1,
-//     fillOpacity: 0.8
-//   };
-
-
-//   //var myFeatureGroup2 = L.featureGroup().addTo(map);
-// var myFeatureGroup2 = L.featureGroup();
-
-
-//   var geoLayer;
-
-//   //group2Json.length = 200;
-  
-//   for (let i = 0; i < group2Json.length; i++) {
-
-//     coords = group2Json[i].geometry.track.coordinates
-
-//     //console.log(coords)
-
-//     if (!coords) {
-//       continue
-//     }
-
-//     coords = group2Json[i].geometry.track.coordinates
-//     type = group2Json[i].geometry.track.type
-//     expocode = group2Json[i].expocode
-//     collection = group2Json[i].collections
-//     ship = group2Json[i].ship
-//     country = group2Json[i].country
-//     startDate = group2Json[i].startDate
-//     endDate = group2Json[i].endDate
-//     participant = group2Json[i].participants
-
-//     group2GeoJson = {}
-
-//     group2GeoJson.type = "Feature"
-//     group2GeoJson.geometry = {}
-//     group2GeoJson.geometry.type = "MultiPoint"
-//     group2GeoJson.geometry.coordinates = coords
-//     group2GeoJson.properties = {}
-//     group2GeoJson.properties.expocode = expocode
-//     group2GeoJson.properties.collection = collection
-//     group2GeoJson.properties.ship = ship
-//     group2GeoJson.properties.country = country
-//     group2GeoJson.properties.startDate = startDate
-//     group2GeoJson.properties.endDate = endDate
-//     group2GeoJson.properties.participant = participant
-
-//     //myFeatures.features.push(group2GeoJson)
-
-
-//     geoLayer = L.geoJson(group2GeoJson, {
-//         pointToLayer: function (feature, latlng) {
-//             return L.circleMarker(latlng, geojsonMarkerOptions2);
-//         },
-//         onEachFeature: function (feature, layer) {
-//         //console.log(layer.feature)
-//         layer.bindPopup('<p>expocode: '+ expocode +'</p>');
-//       }
-//     }).addTo(map);  
-
-//     myFeatureGroup2.addLayer(geoLayer);
-
-//   }
-
-
-//     var group1 = L.layerGroup(myFeatureGroup1);
-
-//     var group2 = L.layerGroup(myFeatureGroup2);
-
-
-//     map.addLayer(myFeatureGroup1);
-//     map.addLayer(myFeatureGroup2);
-
-//     var baseMaps = {
-//       "base": OpenStreetMap_Mapnik
-//     };
-
-//     var overlayMaps = {
-//       "Group1": myFeatureGroup1,
-//       "Group2": myFeatureGroup2
-//     }
-
-//     L.control.layers(baseMaps, overlayMaps).addTo(map);
-
-
-
-
-//   var features;
-
-//   map.on('zoomend', function() {
-
-//     //features = []
-
-//     var expocode
-//     var parent
-//     var element
-//     var el_id
-
-
-//     var expocodes1 = []
-//     var collections1 = []
-//     var ships1 = []
-//     var countries1 = []
-//     var startDates1 = []
-//     var endDates1 = []
-//     var participants1 = []
-
-//     var expocodes2 = []
-//     var collections2 = []
-//     var ships2 = []
-//     var countries2 = []
-//     var startDates2 = []
-//     var endDates2 = []
-//     var participants2 = []    
-
-//     var parents = []
-//     var myLayers = []
-//     //var myFeatureGroupLayers1 = []
-
-
-//     myFeatureGroup1.eachLayer(function(layer) {
-
-//       // layers in feature group
-//       layer.eachLayer(function (layer) {
-
-//         // markers in layer
-//         layer.eachLayer(function (layer) {
-
-//           if(map.getBounds().contains(layer.getLatLng())) {
-
-
-//             parent = layer._eventParents
-
-//             el_id = Object.keys(parent)[0]
-
-//             expocode = parent[el_id].feature.properties.expocode
-//             collection = parent[el_id].feature.properties.collection
-//             ship = parent[el_id].feature.properties.ship
-//             country = parent[el_id].feature.properties.country
-//             startDate = parent[el_id].feature.properties.startDate
-//             endDate = parent[el_id].feature.properties.endDate
-//             participant = parent[el_id].feature.properties.participant
-
-//             if(expocodes1.indexOf(expocode) === -1) {
-//               expocodes1.push(expocode);
-//               collections1.push(collection)
-//               ships1.push(ship)
-//               countries1.push(country)
-//               startDates1.push(startDate)
-//               endDates1.push(endDate)
-//               participants1.push(participant)
-
+//       $('#datatable1').DataTable( {
+//           "destroy": true,
+//           "paging": true,
+//           "pagingType": "full_numbers",
+//           "data": dataSet1,
+//           "columns": [
+//               { title: "Expocode"},
+//               { title: "Platform"},
+//               { title: "Start Date" },
+//               { title: "End Date" },
+//               { title: "PI" }
+//           ],
+//           "columnDefs": [ {
+//             "targets": 0,
+//             "render": function ( data, type, row, meta ) {
+//               return '<a href="https://cchdo.ucsd.edu/cruise/'+ data +'">'+ data + '</a>';
 //             }
+//           }
+//           ],
 
-//           }   
-//         })
+//           "order": [[ 1, "desc" ]]
+//       } );
 
-//       })
-
-//     });  /// end featureGroup1
+//   } ); // end datatable
 
 
-//     myFeatureGroup2.eachLayer(function(layer) {
 
-//       // layers in feature group
-//       layer.eachLayer(function (layer) {
 
-//         // markers in layer
-//         layer.eachLayer(function (layer) {
 
-//           if(map.getBounds().contains(layer.getLatLng())) {
+//   $(document).ready(function() {
 
-//             parent = layer._eventParents
+//       $.fn.dataTable.moment( 'YYYY-MM-DD' );
 
-//             el_id = Object.keys(parent)[0]
-
-//             expocode = parent[el_id].feature.properties.expocode
-//             collection = parent[el_id].feature.properties.collection
-//             ship = parent[el_id].feature.properties.ship
-//             country = parent[el_id].feature.properties.country
-//             startDate = parent[el_id].feature.properties.startDate
-//             endDate = parent[el_id].feature.properties.endDate
-//             participant = parent[el_id].feature.properties.participant
-
-//             if(expocodes2.indexOf(expocode) === -1) {
-//               expocodes2.push(expocode);
-//               collections2.push(collection)
-//               ships2.push(ship)
-//               countries2.push(country)
-//               startDates2.push(startDate)
-//               endDates2.push(endDate)
-//               participants2.push(participant)
-
+//       $('#datatable2').DataTable( {
+//           "destroy": true,
+//           "paging": true,
+//           "pagingType": "full_numbers",
+//           "data": dataSet2,
+//           "columns": [
+//               { title: "Dataset Id"},
+//               { title: "Platforms"},
+//               { title: "Start Date" },
+//               { title: "End Date" },
+//               { title: "PI" }
+//           ],
+//           "columnDefs": [ {
+//             "targets": 0,
+//             "render": function ( data, type, row, meta ) {
+//               return '<a href="https://www.bco-dmo.org/dataset/'+ data +'">'+ data + '</a>';
 //             }
+//           }, 
+//           {
+//             "targets": 1,
+//             "render": function(data,type,row,meta) {
+//                 var list = "<ul>";
+//                 for (var i=0; i< data.length; i++){
+//                   list += "<li>" + data[i] + "</li>";
+//                 }
+//                 list += "</ul>";
+//                 return list}
+//             }
+//           ],
+
+//           "order": [[ 1, "desc" ]]
+//       } );
+
+//   }); // end datatable
 
 
-//           }   
-//         })
-
-//       })
-
-//     }); /// end feature group2 
-
-//     console.log(expocodes2)
+// }
 
 
-//     // Datatable
+map.on('zoomend', function() {
 
-//     var dataSet1 = []
-//     var element
+  showTables(map, myFeatureCCHDO, myFeatureBCODMO)
 
-//     for (var k = 0; k < expocodes1.length; k++) {
+}); // end on zoom
 
-//       element = [expocodes1[k], collections1[k], ships1[k], countries1[k],
-//                  startDates1[k], endDates1[k], participants1[k]]
-//       dataSet1.push(element)
-
-
-//     }
-
-    
-//     var dataSet2 = []
-
-//     for (var k = 0; k < expocodes2.length; k++) {
-
-//       element = [expocodes2[k], collections2[k], ships2[k], countries2[k],
-//                  startDates2[k], endDates2[k], participants2[k]]
-//       dataSet2.push(element)
-
-
-//     }
-
-
-//     $(document).ready(function() {
-
-//         $.fn.dataTable.moment( 'YYYY-MM-DD' );
-
-//         $('#datatable1').DataTable( {
-//             "destroy": true,
-//             "paging": true,
-//             "data": dataSet1,
-//             "columns": [
-//                 { title: "Expocode"},
-//                 { title: "Line(s)"},
-//                 { title: "Ship"},
-//                 { title: "Country"},
-//                 { title: "Start Date" },
-//                 { title: "End Date" },
-//                 { title: "PI" }
-//             ],
-//             "columnDefs": [ {
-//               "targets": 0,
-//               "render": function ( data, type, row, meta ) {
-//                 return '<a href="https://cchdo.ucsd.edu/cruise/'+ data +'">'+ data + '</a>';
-//               }
-//             }, 
-//             {
-//               "targets": 1,
-//               "render": function(data,type,row,meta) {
-//                   var list = "<ul>";
-//                   for (var i=0; i< data.woce_lines.length; i++){
-//                     list += "<li>" + data.woce_lines[i] + "</li>";
-//                   }
-//                   list += "</ul>";
-//                   return list}
-//               },
-//               {
-//               "targets": 6,
-//               "render": function(data, type, full, meta){
-//                   var list = "<ul>";
-//                   for (var i=0; i<data.length; i++){
-//                     if (data[i].role == "Chief Scientist"){
-//                       list += "<li>" + data[i].name + "</li>";
-//                     }
-//                   }
-//                   list += "</ul>";
-//                   return list}
-//               }
-          
-//             ],
-
-//             "order": [[ 1, "desc" ]]
-//         } );
-//     } ); // end datatable
-
-
-
-
-
-//     $(document).ready(function() {
-
-//         $.fn.dataTable.moment( 'YYYY-MM-DD' );
-
-//         $('#datatable2').DataTable( {
-//             "destroy": true,
-//             "paging": true,
-//             "data": dataSet2,
-//             "columns": [
-//                 { title: "Expocode"},
-//                 { title: "Line(s)"},
-//                 { title: "Ship"},
-//                 { title: "Country"},
-//                 { title: "Start Date" },
-//                 { title: "End Date" },
-//                 { title: "PI" }
-//             ],
-//             "columnDefs": [ {
-//               "targets": 0,
-//               "render": function ( data, type, row, meta ) {
-//                 return '<a href="https://cchdo.ucsd.edu/cruise/'+ data +'">'+ data + '</a>';
-//               }
-//             }, 
-//             {
-//               "targets": 1,
-//               "render": function(data,type,row,meta) {
-//                   var list = "<ul>";
-//                   for (var i=0; i< data.woce_lines.length; i++){
-//                     list += "<li>" + data.woce_lines[i] + "</li>";
-//                   }
-//                   list += "</ul>";
-//                   return list}
-//               },
-//               {
-//               "targets": 6,
-//               "render": function(data, type, full, meta){
-//                   var list = "<ul>";
-//                   for (var i=0; i<data.length; i++){
-//                     if (data[i].role == "Chief Scientist"){
-//                       list += "<li>" + data[i].name + "</li>";
-//                     }
-//                   }
-//                   list += "</ul>";
-//                   return list}
-//               }
-          
-//             ],
-
-//             "order": [[ 1, "desc" ]]
-//         } );
-
-//     }); // end datatable
-
-
-
-//   }); // end on zoom
-
-
-
-
-
-// })  // end promise
 
 
 
