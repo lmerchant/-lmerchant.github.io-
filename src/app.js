@@ -171,7 +171,7 @@ Promise.all([
         } 
 
         if (!startDate) {
-          return false
+          return true
         }
 
         if (startYear >= minDate && startYear <= maxDate) {
