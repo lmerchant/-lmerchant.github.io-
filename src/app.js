@@ -158,44 +158,37 @@ Promise.all([
       minDateEl.innerHTML = minDate
       maxDateEl.innerHTML = maxDate
 
+      function filterByDate(feature) {
+        var startDate = feature['properties']['start_date']
+        var endDate = feature['properties']['end_date']
+
+        if (startDate) {
+          var startYear = parseInt(startDate.slice(0,4))
+        } 
+
+        if (endDate) {
+          var endYear = parseInt(endDate.slice(0,4))
+        } 
+
+        if (!startDate) {
+          return false
+        }
+
+        if (startYear >= minDate && startYear <= maxDate) {
+          return true
+        } else if (endDate && (endYear >= minDate && endYear <= maxDate)) {
+          return true
+        } else {
+          return false
+        }        
+      }
+
       var cchdoFeaturesFiltered = cchdoFeatures.filter(function(feature) {
-          var startDate = feature['properties']['start_date']
-          var endDate = feature['properties']['end_date']
-
-          if (startDate) {
-            var startYear = parseInt(startDate.slice(0,4))
-          } 
-
-          if (endDate) {
-            var endYear = parseInt(endDate.slice(0,4))
-          } 
-
-          if (startDate && endDate) {
-            return startYear >= minDate && endYear <= maxDate
-          } else {
-            return startYear >= minDate && startYear <= maxDate
-          }
-
-        })
+          return filterByDate(feature)
+      })
 
       var bcodmoFeaturesFiltered = bcodmoFeatures.filter(function(feature) {
-          var startDate = feature['properties']['start_date']
-          var endDate = feature['properties']['end_date']
-
-          if (startDate) {
-            var startYear = parseInt(startDate.slice(0,4))
-          }
-
-          if (endDate) {
-            var endYear = parseInt(endDate.slice(0,4))
-          } 
-
-          if (startDate && endDate) {
-            return startYear >= minDate && endYear <= maxDate
-          } else {
-            return startYear >= minDate && startYear <= maxDate
-          }
-        
+        return filterByDate(feature)
        })
 
 
