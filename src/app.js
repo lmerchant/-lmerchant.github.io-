@@ -1,9 +1,11 @@
 import axios from 'axios'
 import {cchdoPopupText, bcodmoPopupText} from './popUpText'
 import {showTables} from './showTables'
-
+import filterMap from './filterMap'
 
 var map = L.map('mapid',{"preferCanvas": true, zoomSnap: 0.25, zoomControl: false}).setView([0, 0], 1.25);
+
+//map.setMaxBounds(  [[-90,-180],   [90,180]]  )
 
 var basemap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19,
@@ -18,28 +20,28 @@ zoomHome.addTo(map);
 map.spin(true);
 
 
-  let cchdo_markers = {
-      radius: 5,
-      fillColor: "#ff7800",
-      color: "#000",
-      weight: 1,
-      opacity: 1,
-      fillOpacity: 0.8
-    };
+let cchdo_markers = {
+    radius: 5,
+    fillColor: "#ff7800",
+    color: "#000",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.8
+  };
 
-    let bcodmo_markers = {
-      radius: 5,
-      fillColor: "#00cc00",
-      color: "#000",
-      weight: 1,
-      opacity: 1,
-      fillOpacity: 0.8
-    };
+  let bcodmo_markers = {
+    radius: 5,
+    fillColor: "#00cc00",
+    color: "#000",
+    weight: 1,
+    opacity: 1,
+    fillOpacity: 0.8
+  };
 
-  L.Control.boxzoom({ position:'topleft' }).addTo(map);
+L.Control.boxzoom({ position:'topleft' }).addTo(map);
 
-  var myFeatureCCHDO = L.featureGroup();
-  var myFeatureBCODMO = L.featureGroup();
+var myFeatureCCHDO = L.featureGroup();
+var myFeatureBCODMO = L.featureGroup();
 
 
 
@@ -149,49 +151,13 @@ Promise.all([
   //sliderElement.addEventListener('click', function () {
   slider.noUiSlider.on('change', function() {
 
-      var sliderVal = slider.noUiSlider.get()
-      var minDate = parseInt(sliderVal[0])
-      var maxDate = parseInt(sliderVal[1])
+    var cchdoFeaturesFiltered;
+    var bcodmoFeaturesFiltered;
 
-      console.log('start', cchdoFeatures.length)
+    // filter points by date via slider
+    [cchdoFeaturesFiltered, bcodmoFeaturesFiltered] = filterMap(slider, cchdoFeatures, bcodmoFeatures);
 
-      minDateEl.innerHTML = minDate
-      maxDateEl.innerHTML = maxDate
-
-      function filterByDate(feature) {
-        var startDate = feature['properties']['start_date']
-        var endDate = feature['properties']['end_date']
-
-        if (startDate) {
-          var startYear = parseInt(startDate.slice(0,4))
-        } 
-
-        if (endDate) {
-          var endYear = parseInt(endDate.slice(0,4))
-        } 
-
-        if (!startDate) {
-          return true
-        }
-
-        if (startYear >= minDate && startYear <= maxDate) {
-          return true
-        } else if (endDate && (endYear >= minDate && endYear <= maxDate)) {
-          return true
-        } else {
-          return false
-        }        
-      }
-
-      var cchdoFeaturesFiltered = cchdoFeatures.filter(function(feature) {
-          return filterByDate(feature)
-      })
-
-      var bcodmoFeaturesFiltered = bcodmoFeatures.filter(function(feature) {
-        return filterByDate(feature)
-       })
-
-
+    // Redraw map with filtered points
     map.removeLayer(myFeatureCCHDO)
     map.removeLayer(myFeatureBCODMO)
 
@@ -224,7 +190,6 @@ Promise.all([
 
     myFeatureBCODMO.addLayer(bcodmoGeoLayer);
 
-
     map.addLayer(myFeatureCCHDO);
     map.addLayer(myFeatureBCODMO);
 
@@ -254,14 +219,19 @@ Promise.all([
 
   });
 
+
+  map.on('zoomend', function() {
+
+    showTables(map, myFeatureCCHDO, myFeatureBCODMO)
+
+  }); 
+
 })
 
 
-map.on('zoomend', function() {
 
-  showTables(map, myFeatureCCHDO, myFeatureBCODMO)
 
-}); 
+
 
 
 
