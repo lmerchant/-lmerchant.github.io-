@@ -13,10 +13,10 @@
   "license": "ISC",
   "devDependencies": {
     "webpack": "^4.39.3",
-    "webpack-cli": "^3.3.7"
+    "webpack-cli": "^3.3.12"
   },
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "jquery": "^3.5.0",
     "leaflet-pixi-overlay": "^1.8.1",
     "nouislider": "^14.1.1",
